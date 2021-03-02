@@ -43,7 +43,7 @@ def getHashes(fn):
 
 
 def walktree(top, callback):
-    dstruct = { "dirs": [], "files": [] }
+    dstruct = { "self": top, "dirs": [], "files": [] }
     for f in os.listdir(top):
         pathname = os.path.join(top, f)
         mode = os.stat(pathname).st_mode
