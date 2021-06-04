@@ -1,0 +1,21 @@
+{
+    "Name": "Special file set for experiments",
+    "Description": "File were collected for your experiments with statistics and ML.",
+    "Duration": "3506.868722 seconds",
+    "Author": "Random Nerd, Inc.",
+    "Contact": "random_nerd@example.org",
+    "Disclaimer": "These files were generated in the Moon Base, Closer to the Sun.",
+    "License": "https://creativecommons.org/licenses/by/3.0/",
+    "Password": "The password of the compressed file is 'unknown'",
+    "SHA256": "11d76cac2eb9c6e426ff87b3fbf5a37d28cdb86e75d6ba22683009c1460b42f28",
+    "Start": "Tue Aug 15 21:29:20 CEST 2017",
+    "End": "Wed Aug 16 10:17:46  2017",
+    "timeline": {
+        "Tue Aug 15 21:29:20 CEST 2017": "landing",
+        "Wed Aug 16 10:17:46 CEST 2017": "power off",
+        "Wed Aug 16 12:17:46 CEST 2017": "sleep",
+        "Wed Aug 16 23:17:46 CEST 2017": "wakeup"
+    },
+    "URL": "https://www.example.org/share/this-set-name",
+    "Citation": "Special file set for experiments, Tue Aug 15 21:29:20 CEST 2017. Moon Laboratory."
+}

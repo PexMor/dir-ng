@@ -7,6 +7,7 @@ import json
 from stat import *
 from datetime import datetime, timezone
 import hashlib
+import argparse
 
 
 def hashFile(hashName, filename):
@@ -18,9 +19,18 @@ def hashFile(hashName, filename):
             h.update(mv[:n])
     return h.hexdigest()
 
-def fixName(ffn,pfx):
-    cut = len(pfx) + 1
-    return ffn[cut:]
+def fixName2(ffn,removePfx,addPfx):
+    tmp_path = ffn
+    if len(removePfx) >0:
+        cut = len(removePfx) + 1
+        tmp_path = ffn[cut:]
+    if len(tmp_path)>0:
+        if len(addPfx)>0:
+            tmp_path = addPfx + "/" + tmp_path
+    else:
+        tmp_path = addPfx
+    
+    return tmp_path
 
 def finfo(ffn):
     global urlBase,root_pfx,url_pfx
@@ -28,8 +38,8 @@ def finfo(ffn):
     fn = os.path.basename(ffn)
     fobj = {
         "name": fn,
-        "fname": fixName(ffn,root_pfx),
-        "url": urlBase + "/" + fixName(ffn,url_pfx),
+        "fname": fixName2(ffn,config.walk_dir,config.rel_pfx),
+        "url": config.url_base + "/" + fixName2(ffn,config.walk_dir,config.url_ifx),
         "size": sobj.st_size,
         "mtime": sobj.st_mtime,
         "mtime_human": str(datetime.fromtimestamp(sobj.st_mtime, tz=timezone.utc)),
@@ -50,31 +60,59 @@ def flatDir(walk_dir):
     for root, subdirs, files in os.walk(walk_dir):
         farr = []
         for fn in files:
-            if fn != "dir-ng.json":
+            if fn != config.self_fn:
                 ffn = os.path.join(root, fn)
                 fobj = finfo(ffn)
                 farr.append(fobj)
-        dstruct[fixName(root,root_pfx)] = farr
+        # root_pfx
+        if not config.no_empty or len(farr)>0:
+            dstruct[fixName2(root,config.walk_dir,config.rel_pfx)] = farr
     return dstruct
 
-urlBase="https://www.example.com/shared/data"
-walk_dir = "."
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Walk the directory tree and produce metadata',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument('walk_dir',
+        type=str, nargs="?", default=".",
+        help='directory to walk down')
+    parser.add_argument('--url-base',
+        type=str, default= "https://www.example.com/share",
+        help='common url prefix for files')
+    parser.add_argument('--rel-pfx',
+        type=str, default='.', help='metadata file path prefix')
+    parser.add_argument('--rel-ldn',
+        type=bool, default=True, help='add last part of the walk_directory as file path prefix')
+    parser.add_argument('--url-ifx',
+        type=str, default='', help='file path infix used for URL')
+    parser.add_argument('--self-fn',
+        type=str, default='dir-ng.json', help='filename to omit from listings')
+    parser.add_argument('--wrap-fn',
+        type=str, help='a json file that wraps the file listing')
+    parser.add_argument('--yaml',
+        type=bool, default=False, help='Output yaml instead of json')
+    parser.add_argument('--no-empty',
+        type=bool, default=True, help='Skip empty folder')
+    args = parser.parse_args()
+    return args
+    
+def main():
+    global config
+    config = parse_args()
+    if (config.rel_ldn):
+        config.rel_pfx = config.walk_dir.split("/")[-1]
 
-if len(sys.argv) > 1:
-    walk_dir = sys.argv[1]
+    # walk_dir_abs = os.path.abspath(config.walk_dir)
 
-root_pfx = walk_dir
+    flat = flatDir(config.walk_dir)
+    wrap = {}
+    if config.wrap_fn is not None:
+        with open(config.wrap_fn) as f:
+            wrap = json.load(f)        
+    wrap["Files"] = flat
 
-if len(sys.argv) > 2:
-    root_pfx = sys.argv[2]
+    print(json.dumps(wrap, indent=2))
 
-url_pfx = root_pfx
-
-if len(sys.argv) > 3:
-    url_pfx = sys.argv[3]
-
-walk_dir_abs = os.path.abspath(walk_dir)
-
-flat = flatDir(walk_dir)
-
-print(json.dumps(flat, indent=2))
+if __name__ == "__main__":
+    main()
